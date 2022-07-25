@@ -1,13 +1,22 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul 25 17:00:41 2022
+
+@author: 王若宇
+"""
+
 import numpy as np
-import sys
+#import sys
 import yaml
-import matools.vector as vector
+from matools import vector, utility
+#import matools.utility
         
 ## ====================== structure ============================
             
 class structure():
     '''
-    Class for cell structure
+    Class for crystal structure
+    
     Unit length: Angstrom    
     '''
     def __init__(self, name:str, a:vector.lat_vec,b:vector.lat_vec,c:vector.lat_vec, ions, ions_pos, coord_sys,scaler):
@@ -104,7 +113,18 @@ class structure():
             print('cannot open', filename)
 
     
-# ========================== POSCAR processing =======================
+# ========================== structure processing =======================
+    def volume(self):
+        '''
+        return the volume of cell in Angstrom**3
+        
+        a X b . c
+        '''
+        a=self.a.vec
+        b=self.b.vec
+        c=self.c.vec
+        return (a[1]*b[2]-a[2]*b[1])*c[0]+(a[2]*b[0]-a[0]*b[2])*c[1]+(a[0]*b[1]-a[1]*b[0])*c[2]
+            
     def atom(self,n):
         '''
         return the element and position of the nth atom
@@ -134,26 +154,18 @@ class structure():
         pass
     
     
-    def iterative_print (self,ite_obj):
-        '''print iteratives as string'''
-        output=''
-        for i in ite_obj:
-            if type(i)==np.float64:
-                output += (r' {:.16f}'.format(i))
-            else:
-                output += (r' {}'.format(i))
-        return output
+
 
 # ==========================   output ======================================    
     def write_to_poscar(self, output_f, name='default'):
         '''write_to_POSCAR'''
         with open(output_f,'w') as output_f:
             output_f.write(name+'\n'+str(self.scaler)+'\n')
-            output_f.write(self.iterative_print(self.a)+'\n')
-            output_f.write(self.iterative_print(self.b)+'\n')
-            output_f.write(self.iterative_print(self.c)+'\n')
+            output_f.write(utility.iterative_print(self.a.vec)+'\n')
+            output_f.write(utility.iterative_print(self.b.vec)+'\n')
+            output_f.write(utility.iterative_print(self.c.vec)+'\n')
             
-            num_ions=len(self.ions)
+            #num_ions=len(self.ions)
             ele_key=[self.ions[0]]
             ele_num=[]
             c_ele_num=1
@@ -166,11 +178,11 @@ class structure():
                     c_ele_num=1
             ele_num.append(c_ele_num)
 
-            output_f.write(self.iterative_print(ele_key)+'\n')
-            output_f.write(self.iterative_print(ele_num)+'\n')
-            output_f.write(self.coordination_sys+'\n')
+            output_f.write(utility.iterative_print(ele_key)+'\n')
+            output_f.write(utility.iterative_print(ele_num)+'\n')
+            output_f.write(self.coord_sys+'\n')
             for i in self.ions_pos:
-                output_f.write(self.iterative_print(i)+'\n')
+                output_f.write(utility.iterative_print(i)+'\n')
         return output_f
         
 
