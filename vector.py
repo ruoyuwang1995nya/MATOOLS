@@ -1,5 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jul 25 18:02:37 2022
+
+@author: 王若宇
+"""
+
 import numpy as np
-import sys
+
 # ==================== vector =============================
 class vector_base():
     '''
