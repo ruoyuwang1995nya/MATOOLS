@@ -8,18 +8,73 @@ Created on Mon Jul 25 17:00:41 2022
 import numpy as np
 #import sys
 import yaml
-from matools import vector, utility
-#import matools.utility
+from matools import vector,utility, atom
+
+
+
+# ======================================================        
         
+class ionsClassIter():
+    '''
+    Class iterator for "ions" cls
+    '''
+    def __init__(self,ions):
+        self._ions=ions # take ions instance as input
+        self._n=0     # Current index for iteration
+        
+        
+    def __iter__(self):
+        '''Return iterator object'''
+        return self
+    
+    def __next__(self):
+        if self._n < len(self._ions._ions):
+            member=self._ions._ions[self._n]
+            self._n += 1
+            return member
+        else:
+            raise StopIteration
+        
+class ions_cell():
+    '''
+    Class for managing the group of ions within unit cell
+    '''
+    def __init__(self):
+        self._ions=[]  # include atom and position within cell
+        
+    def __getitem__(self,index:int): # make ions_cell object subscriptable
+        return self._ions[index]
+        
+    def members(self):
+        return [(i[0].element,i[1].vec) for i in self._ions]
+        
+    def add_ion(self,ion:atom.atom,position:vector.lat_vec):
+        self._ions.append((ion,position))
+        
+    def remove_ion(self,index:int):
+        '''
+        Remove designated atom from ions group
+        '''
+        if index < len(self._ions):
+            ion=self._ions[index]
+            #print()
+            self._ions.remove(ion)
+            print('{} at {} Removed'.format(ion[0].element,ion[1].vec))
+        else:
+            raise IndexError
+        
+    def __iter__(self):
+        '''Return iterator object'''
+        return ionsClassIter(self)
+    
 ## ====================== structure ============================
-            
 class structure():
     '''
     Class for crystal structure
     
     Unit length: Angstrom    
     '''
-    def __init__(self, name:str, a:vector.lat_vec,b:vector.lat_vec,c:vector.lat_vec, ions, ions_pos, coord_sys,scaler):
+    def __init__(self, name:str, a:vector.lat_vec,b:vector.lat_vec,c:vector.lat_vec, ions, coord_sys,scaler):
             #print("empty structure")
         self.name=name
         self.scaler=scaler
@@ -30,8 +85,7 @@ class structure():
         self.c=c
                 
         self._coord_sys=coord_sys
-        self.ions=ions
-        self.ions_pos=ions_pos
+        self._ions=ions
 
             
     @property
@@ -44,8 +98,15 @@ class structure():
         else:
             self._coord_sys=sys
             
-        
-# ======================== POSCAR generation =========================
+    @property
+    def ions(self):
+        return self._ions
+    @ions.setter
+    def ions(self,value:ions_cell):
+        self._ions=value
+
+# ======================== I/O interface =========================
+    # ==================== Input file =========================
     @classmethod
     def from_poscar(cls,filename):
         '''read cell structure from POSCAR'''
@@ -61,24 +122,27 @@ class structure():
             ele_keys=np.array(lines[5].strip('\n').split())
             ele_num=np.array(lines[6].strip('\n').split()).astype('int')
             
-
             ions=[]
-            for atom in zip(ele_keys,ele_num):
-                for i in range(atom[1]):
-                    ions.append(atom[0])
+            for atom_ele in zip(ele_keys,ele_num):
+                for i in range(atom_ele[1]):
+                    ions.append(atom.atom(atom_ele[0]))
             ions=np.array(ions)
             
             coordination_sys=lines[7].strip('\n')
             
             # ion positions
+            ions_pos=[]
             ion_position=lines[8:8+ele_num.sum()]
-            ions_pos=np.zeros((len(ion_position),3))
+            #ions_pos=np.zeros((len(ion_position),3))
             for i,n in enumerate(ion_position):
                 line=n.split()
-                for j in range(3):
-                    ions_pos[i,j]=line[j]
-            ions_pos=ions_pos.astype('float64')
-            return cls(name, a, b, c, ions,ions_pos,coordination_sys,scaler=scaler)
+                ions_pos.append(vector.lat_vec([float(line[j]) for j in range(3)]))
+
+            ions_cell_c=ions_cell()
+            for ion in zip(ions,ions_pos):
+                ions_cell_c.add_ion(ion[0],ion[1])
+            
+            return cls(name, a, b, c, ions_cell_c,coordination_sys,scaler=scaler)
         except OSError:
             print('cannot open', filename)
 
@@ -101,19 +165,54 @@ class structure():
             ions=[]
             ions_pos=[]
             for ion in points:
-                ions.append(ion['symbol'])
-                ions_pos.append(ion['coordinates'])
-            ions=np.array(ions)
-            ions_pos=np.array(ions_pos)
+                ions.append(atom.atom(ion['symbol']))
+                ions_pos.append(vector.lat_vec(ion['coordinates']))
+            
+            ions_cell_c=ions_cell()
+            for ion in zip(ions,ions_pos):
+                ions_cell_c.add_ion(ion[0],ion[1])
+            
             coordination_sys='Direct'
             print(scaler)
-            return cls(name, a, b, c, ions,ions_pos,coordination_sys,scaler=scaler)
+            return cls(name, a, b, c, ions_cell_c,coordination_sys,scaler=scaler)
             
         except OSError:
             print('cannot open', filename)
+            
+    # ========================== Output file ======================================    
+    def write_to_poscar(self, output_f, name='default'):
+        '''write_to_POSCAR'''
+        with open(output_f,'w') as output_f:
+            output_f.write(name+'\n'+str(self.scaler)+'\n')
+            output_f.write(utility.iterative_print(self.a.vec)+'\n')
+            output_f.write(utility.iterative_print(self.b.vec)+'\n')
+            output_f.write(utility.iterative_print(self.c.vec)+'\n')
+
+            ions=self.ions.members()
+            
+            ele_key=[ions[0][0]]
+            ele_num=[]
+            c_ele_num=1 # number of current element
+            for i in range(1,len(ions)):
+                if ions[i][0]==ele_key[-1]:
+                    c_ele_num+=1
+                else:
+                    ele_key.append(ions[i][0])
+                    ele_num.append(c_ele_num)
+                    c_ele_num=1
+            ele_num.append(c_ele_num)
+
+            output_f.write(utility.iterative_print(ele_key)+'\n')
+            output_f.write(utility.iterative_print(ele_num)+'\n')
+            output_f.write(self.coord_sys+'\n')
+            
+            # adding element counter
+            for i in ions:                               # atom position
+                output_f.write(utility.iterative_print(i[1])+'\n')
+        return output_f      
 
     
-# ========================== structure processing =======================
+# ========================== Functionalities =======================
     def volume(self):
         '''
         return the volume of cell in Angstrom**3
@@ -124,28 +223,57 @@ class structure():
         b=self.b.vec
         c=self.c.vec
         return (a[1]*b[2]-a[2]*b[1])*c[0]+(a[2]*b[0]-a[0]*b[2])*c[1]+(a[0]*b[1]-a[1]*b[0])*c[2]
-            
-    def atom(self,n):
-        '''
-        return the element and position of the nth atom
-        '''
-        try:
-            return (self.ions[n-1],self.ions_pos[n-1])
-        except IndexError:
-            print('atom index out of range')
     
-    def bond_length(self,atom1,atom2):
+    def coord_transform(self):
+        '''
+        Transform the coordinates from Direct to Cartesian or vice versa
+        '''
+        if self.coord_sys[0] in 'Cc':
+            for ion in self.ions:
+                self.cartesian_to_direct(ion[1])
+            self.coord_sys='Direct'
+            print("Changed to Direct coordinates")
+            
+        else:
+            for ion in self.ions:
+                self.direct_to_cartesian(ion[1])
+            self.coord_sys='Cartesian'
+            print("Changed to Cartesian coordinates")
+        
+    def cartesian_to_direct(self,ion:vector.lat_vec):
+        a=vector.multiply(ion,self.a)/self.a.modulus()**2
+        b=vector.multiply(ion,self.b)/self.b.modulus()**2
+        c=vector.multiply(ion,self.c)/self.c.modulus()**2
+        ion.vec[0]=a
+        ion.vec[1]=b
+        ion.vec[2]=c
+        #print("Changed to direct coordinates")
+    
+    def direct_to_cartesian(self,ion:vector.lat_vec):
+        '''
+        transform vector in direct sys to cartesian 
+        '''
+        #sum([])
+        x=ion.vec[0]*self.a.vec[0]+ion.vec[1]*self.b.vec[0]+ion.vec[2]*self.c.vec[0]
+        y=ion.vec[0]*self.a.vec[1]+ion.vec[1]*self.b.vec[1]+ion.vec[2]*self.c.vec[1]
+        z=ion.vec[0]*self.a.vec[2]+ion.vec[1]*self.b.vec[2]+ion.vec[2]*self.c.vec[2]
+        ion.vec[0]=x
+        ion.vec[1]=y
+        ion.vec[2]=z
+        #print("Changed to cartesian coordinates")
+            
+    
+    def bond_length(self,index1:int,index2:int):
         '''
         return the bond length between two atoms
+        param: index
         '''
-        try:
-            a=(self.ion[atom1-1],self.ion_position[atom1-1])
-            b=(self.ion[atom2-1],self.ion_position[atom2-1])
-            diff=a[1]-b[1]
-            return sum(diff**2)**0.5
-        except IndexError:
-            print('atom index out of range')
-
+        vec=self.ions[index1][1]-self.ions[index2][1]
+        if self.coord_sys[0] in 'Cc':
+            return vec.modulus()
+        else:
+            self.direct_to_cartesian(vec)
+            return vec.modulus()
     
     def bond_angle(atom1,atom2,atom3):
         pass
@@ -153,37 +281,6 @@ class structure():
     def bond_search(atom,max_length):
         pass
     
-    
 
 
-# ==========================   output ======================================    
-    def write_to_poscar(self, output_f, name='default'):
-        '''write_to_POSCAR'''
-        with open(output_f,'w') as output_f:
-            output_f.write(name+'\n'+str(self.scaler)+'\n')
-            output_f.write(utility.iterative_print(self.a.vec)+'\n')
-            output_f.write(utility.iterative_print(self.b.vec)+'\n')
-            output_f.write(utility.iterative_print(self.c.vec)+'\n')
-            
-            #num_ions=len(self.ions)
-            ele_key=[self.ions[0]]
-            ele_num=[]
-            c_ele_num=1
-            for i in range(1,len(self.ions)):
-                if self.ions[i]==ele_key[-1]:
-                    c_ele_num+=1
-                else:
-                    ele_key.append(self.ions[i])
-                    ele_num.append(c_ele_num)
-                    c_ele_num=1
-            ele_num.append(c_ele_num)
-
-            output_f.write(utility.iterative_print(ele_key)+'\n')
-            output_f.write(utility.iterative_print(ele_num)+'\n')
-            output_f.write(self.coord_sys+'\n')
-            for i in self.ions_pos:
-                output_f.write(utility.iterative_print(i)+'\n')
-        return output_f
         
-
-
