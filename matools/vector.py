@@ -14,8 +14,25 @@ class vector_base():
     dimension: 0: any dimension
     '''
     def __init__(self,vec,d=0):
-        self.d=d
+        self._d=d
         self.vec=vec
+        
+    def __add__(self,other):
+        if self.d==other.d:
+            vec=self.vec+other.vec
+            return vector_base(vec,d=self.d)
+        else:
+            print('The two vector must have the same dimension')
+            raise RuntimeError
+            
+    def __sub__(self,other):
+        if self.d==other.d:
+            vec=self.vec-other.vec
+            return vector_base(vec,d=self.d)
+        else:
+            print('The two vector must have the same dimension')
+            raise RuntimeError
+        
         
     @property
     def d(self):
@@ -51,9 +68,12 @@ class vector_base():
         else:
             raise TypeError("Must be list, tuple or numpy array")
             
+    
+            
     def modulus(self):
         return sum(self.vec**2)**0.5
-        
+    
+
         
 class lat_vec(vector_base):
     '''
@@ -69,3 +89,11 @@ class lat_vec(vector_base):
     def vec(self,new_vec):
         _value = new_vec
         super(type(self),lat_vec).vec.fset(self, _value)
+
+
+def multiply(vec1:vector_base,vec2:vector_base):
+    '''Multiply two vectors'''
+    if vec1.d==vec2.d:    
+        return sum([vec1.vec[i]*vec2.vec[i] for i in range(vec1.d)])
+        
+        
