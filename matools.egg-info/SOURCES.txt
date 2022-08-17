@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+setup.cfg
+matools/__init__.py
+matools/atom.py
+matools/structure.py
+matools/utility.py
+matools/vector.py
+matools.egg-info/PKG-INFO
+matools.egg-info/SOURCES.txt
+matools.egg-info/dependency_links.txt
+matools.egg-info/top_level.txt

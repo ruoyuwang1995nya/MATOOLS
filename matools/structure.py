@@ -46,7 +46,7 @@ class ions_cell():
         return self._ions[index]
         
     def members(self):
-        return [(i[0].element,i[1].vec) for i in self._ions]
+        return [(index,i[0].element,i[1].vec) for index,i in enumerate(self._ions)]
         
     def add_ion(self,ion:atom.atom,position:vector.lat_vec):
         self._ions.append((ion,position))
@@ -66,6 +66,17 @@ class ions_cell():
     def __iter__(self):
         '''Return iterator object'''
         return ionsClassIter(self)
+        
+    def __len__(self):
+        '''return the length of object'''
+        return len(self._ions)
+        
+    def generator(self):
+        '''generate ions on the flow'''
+        i=0
+        while i < len(self):
+            yield self[i]
+            i+=1
     
 ## ====================== structure ============================
 class structure():
@@ -274,7 +285,44 @@ class structure():
         else:
             self.direct_to_cartesian(vec)
             return vec.modulus()
-    
+            
+    def nearest_neighor(self,atom:int):
+        '''
+        return the bond length between two atoms
+        param: index
+        '''
+        try:
+            pos=0
+            if atom==0:
+                distance=self.bond_length(0,1)
+            else:
+                distance=self.bond_length(0,atom)
+            for i in range(len(self.ions)):
+                if i == atom:
+                    pass
+                else:
+                    distance_tmp=self.bond_length(atom,i)
+                    if distance > distance_tmp:
+                        distance=distance_tmp
+                        pos=i
+            return self.ions.members()[pos],distance
+        except IndexError:
+            print("atom out of index")
+            
+    def neighors(self,atom:int,tolerance=0.1):
+        '''
+        return the bond length between two atoms
+        param: index
+        '''
+        try:
+            #neighor_atom=[]
+            distance=self.nearest_neighor(atom)[1]
+            return [self.ions.members()[i] for i in range(len(self.ions)) if atom != i and self.bond_length(atom,i)< (distance+tolerance)]
+        
+        except IndexError:
+            print("atom out of index")
+            
+
     def bond_angle(atom1,atom2,atom3):
         pass
     

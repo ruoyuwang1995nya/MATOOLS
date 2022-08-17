@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: matools
+Version: 0.1.0
+Summary: For lightweight crystal structure manipulation
+Home-page: https://github.com/EuroGaymer/MATOOLS
+Author: Ruoyu Wang
+Author-email: ruoyuwang1995@gmail.com
+Requires-Python: >=3.7
+
+# matools
+Lightweight alternative to pymatgen for simple crystal structure manipulation
+
+The project is based around a structure class with methods providing I/O interface and functionalities such as volume, lattice constant, etc. It is basis for some of my other scripts for input generation/data processing.
