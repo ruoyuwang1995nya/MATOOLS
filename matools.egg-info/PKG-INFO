@@ -1,8 +1,8 @@
 Metadata-Version: 2.1
 Name: matools
-Version: 0.1.0
+Version: 0.1.1
 Summary: For lightweight crystal structure manipulation
-Home-page: https://github.com/EuroGaymer/MATOOLS
+Home-page: https://github.com/ruoyuwang1995ucas/MATOOLS
 Author: Ruoyu Wang
 Author-email: ruoyuwang1995@gmail.com
 Requires-Python: >=3.7
