@@ -201,14 +201,14 @@ class structure():
 
             ions=self.ions.members()
             
-            ele_key=[ions[0][0]]
+            ele_key=[ions[0][1]]
             ele_num=[]
             c_ele_num=1 # number of current element
             for i in range(1,len(ions)):
-                if ions[i][0]==ele_key[-1]:
+                if ions[i][1]==ele_key[-1]:
                     c_ele_num+=1
                 else:
-                    ele_key.append(ions[i][0])
+                    ele_key.append(ions[i][1])
                     ele_num.append(c_ele_num)
                     c_ele_num=1
             ele_num.append(c_ele_num)
@@ -219,7 +219,7 @@ class structure():
             
             # adding element counter
             for i in ions:                               # atom position
-                output_f.write(utility.iterative_print(i[1])+'\n')
+                output_f.write(utility.iterative_print(i[2])+'\n')
         return output_f      
 
     
