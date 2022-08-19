@@ -6,6 +6,6 @@ The project is based around a structure class with methods providing I/O interfa
 The usage of this MATOOLS is self-explainatory
 
 # scripts
-Scripts built on functionalites of MATOOLS module
+Scripts built on the MATOOLS module
 ## pos2sheng.py
 A simple script which transforms POSCAR file into CONTROL file of ShengBTE
