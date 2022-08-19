@@ -48,6 +48,29 @@ class ions_cell():
     def members(self):
         return [(index,i[0].element,i[1].vec) for index,i in enumerate(self._ions)]
         
+    def compact(self):
+        '''
+        return a compact list of elements and atom number
+        '''
+        if len(self._ions)!=0:
+            last_ele=self._ions[0][0].element
+            last_num=1
+            compact_ls=[]
+            for i in range(1,len(self._ions)):
+                if self._ions[i][0].element==last_ele:
+                    last_num+=1
+                else:
+                    compact_ls.append((last_ele,last_num))
+                    last_ele=self._ions[i][0].element
+                    last_num=1
+            compact_ls.append((last_ele,last_num))
+            return compact_ls
+        else:
+            print("No atoms")
+          
+            
+        
+        
     def add_ion(self,ion:atom.atom,position:vector.lat_vec):
         self._ions.append((ion,position))
         
@@ -190,7 +213,7 @@ class structure():
         except OSError:
             print('cannot open', filename)
             
-    # ========================== Output file ======================================    
+    # ========================== Output file ======================  
     def write_to_poscar(self, output_f, name='default'):
         '''write_to_POSCAR'''
         with open(output_f,'w') as output_f:
@@ -222,7 +245,6 @@ class structure():
                 output_f.write(utility.iterative_print(i[2])+'\n')
         return output_f      
 
-    
 # ========================== Functionalities =======================
     def volume(self):
         '''
