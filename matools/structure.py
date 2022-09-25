@@ -342,13 +342,6 @@ class structure():
         except IndexError:
             print("atom out of index")
             
-
-    def bond_angle(self,atom_center:int,atom1:int,atom2:int):
-        '''
-        Return bond angle between two atoms adjacent to a central atom
-        wait to be finished  
-        '''
-        pass
     
     def bond_search (self,atom:int,max_length=1):
         '''
@@ -364,5 +357,10 @@ class structure():
             print("atom out of index")
     
 
-
+    def bond_angle(self,atom_center:int,atom1:int,atom2:int):
+        '''
+        Return bond angle between two atoms adjacent to a central atom
+        wait to be finished  
+        '''
+        pass
         
