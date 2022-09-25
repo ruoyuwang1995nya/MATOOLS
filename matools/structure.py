@@ -310,8 +310,7 @@ class structure():
             
     def nearest_neighor(self,atom:int):
         '''
-        return the bond length between two atoms
-        param: index
+        return the nearest neighor of selected atom
         '''
         try:
             pos=0
@@ -333,8 +332,7 @@ class structure():
             
     def neighors(self,atom:int,tolerance=0.1):
         '''
-        return the bond length between two atoms
-        param: index
+        search for the nearest neigbors of selected atom within given tolerance
         '''
         try:
             #neighor_atom=[]
@@ -345,11 +343,25 @@ class structure():
             print("atom out of index")
             
 
-    def bond_angle(atom1,atom2,atom3):
+    def bond_angle(self,atom_center:int,atom1:int,atom2:int):
+        '''
+        Return bond angle between two atoms adjacent to a central atom
+        wait to be finished  
+        '''
         pass
     
-    def bond_search(atom,max_length):
-        pass
+    def bond_search(self,atom:int,max_length=1):
+        '''
+        Search atoms within max_length (in angstrom) of the central atom
+        param:
+        atom: index of the central atom
+        max_length: the cut-off distance, in angstrom
+        '''
+        try:
+            return [self.ions.members()[i] for i in range(len(self.ions)) if atom != i and self.bond_length(atom,i)< max_length
+                    
+        except IndexError:
+            print("atom out of index")
     
 
 
