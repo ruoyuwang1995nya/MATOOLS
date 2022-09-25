@@ -350,7 +350,7 @@ class structure():
         '''
         pass
     
-    def bond_search(self,atom:int,max_length=1):
+    def bond_search (self,atom:int,max_length=1):
         '''
         Search atoms within max_length (in angstrom) of the central atom
         param:
